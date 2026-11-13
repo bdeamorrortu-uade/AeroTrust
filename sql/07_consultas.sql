@@ -1,17 +1,6 @@
--- =====================================================================
--- 07. Consultas de negocio
--- ---------------------------------------------------------------------
--- Responden las preguntas que AeroTrust Index promete a sus clientes
--- (Actividad 1): qué aerolínea, ruta y horario es más confiable, y
--- cuánto se indemnizó.
--- =====================================================================
+-- 07. Consultas
 
-
--- ---------------------------------------------------------------------
 -- C1. Ranking de aerolíneas por confiabilidad
--- Se calcula sobre todos sus vuelos. RANK() es una función de ventana:
--- numera las filas según el índice sin agrupar los resultados.
--- ---------------------------------------------------------------------
 SELECT
     RANK() OVER (ORDER BY indice DESC)  AS puesto,
     codigo_iata,
@@ -35,10 +24,7 @@ FROM (
 ) t
 ORDER BY puesto;
 
-
--- ---------------------------------------------------------------------
--- C2. ¿Qué franja horaria conviene? (todas las aerolíneas)
--- ---------------------------------------------------------------------
+-- C2. Demoras y cancelaciones por franja horaria
 SELECT
     franja_horaria,
     COUNT(*)                                                                 AS total_vuelos,
@@ -49,12 +35,7 @@ FROM operativo.v_vuelos_con_franja
 GROUP BY franja_horaria
 ORDER BY pct_demorados;
 
-
--- ---------------------------------------------------------------------
--- C3. Motor de recomendación: para viajar de LAX a JFK, ¿qué aerolínea
--- y franja horaria elegir? Ordena las opciones por índice.
--- (Cambiar los códigos de aeropuerto para consultar otra ruta.)
--- ---------------------------------------------------------------------
+-- C3. Mejor aerolínea y franja para LAX -> JFK
 SELECT
     r.aeropuerto_origen  AS origen,
     r.aeropuerto_destino AS destino,
@@ -70,11 +51,7 @@ WHERE r.aeropuerto_origen  = 'LAX'
   AND e.fecha_calculo = (SELECT MAX(fecha_calculo) FROM analitico.evaluacion_riesgo)
 ORDER BY e.indice_confiabilidad DESC, e.total_vuelos DESC;
 
-
--- ---------------------------------------------------------------------
--- C4. Rutas más riesgosas (con al menos 10 vuelos, para que el
--- porcentaje sea representativo).
--- ---------------------------------------------------------------------
+-- C4. Rutas con más problemas (mínimo 10 vuelos)
 SELECT
     r.aeropuerto_origen  AS origen,
     r.aeropuerto_destino AS destino,
@@ -88,10 +65,7 @@ HAVING COUNT(*) >= 10
 ORDER BY pct_con_problemas DESC
 LIMIT 10;
 
-
--- ---------------------------------------------------------------------
--- C5. Evolución mensual de la puntualidad (insumo para dashboards)
--- ---------------------------------------------------------------------
+-- C5. Evolución mensual
 SELECT
     EXTRACT(MONTH FROM fecha_hora_programada)                                AS mes,
     COUNT(*)                                                                 AS total_vuelos,
@@ -101,11 +75,7 @@ FROM operativo.vuelos
 GROUP BY EXTRACT(MONTH FROM fecha_hora_programada)
 ORDER BY mes;
 
-
--- ---------------------------------------------------------------------
--- C6. Resumen financiero por contrato: primas cobradas e indemnizaciones
--- pagadas (ejecutar después del script 08 para ver las liquidaciones).
--- ---------------------------------------------------------------------
+-- C6. Resumen financiero por contrato (correr después del 08)
 SELECT
     c.razon_social,
     c.nivel_cobertura,

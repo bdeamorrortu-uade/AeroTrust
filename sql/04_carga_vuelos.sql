@@ -1,24 +1,4 @@
--- =====================================================================
--- 04. Carga de vuelos (transformación y validación)
--- ---------------------------------------------------------------------
--- Reglas de transformación:
---   * fecha_hora_programada = fl_date + crs_dep_time (hhmm, hora local)
---                             ej.: '2024-04-18' + '1018' -> 2024-04-18 10:18
---   * demora_min            = dep_delay (minutos; negativo = adelantado)
---   * fecha_hora_real       = programada + demora  (así se evitan los
---                             errores de vuelos que cruzan la medianoche)
---   * estado:
---       cancelled = 1        -> 'Cancelled'
---       dep_delay >= 15 min  -> 'Delayed'   (criterio estándar de la BTS)
---       resto                -> 'On-Time'
---   * nro_vuelo: viene como '3535.0' y se guarda como '3535'
---
--- Reglas de validación (filas que se descartan):
---   * aerolínea o ruta inexistente (no pasan el JOIN)
---   * hora programada vacía
---   * vuelo no cancelado sin demora informada
---   * vuelo repetido (ON CONFLICT DO NOTHING)
--- =====================================================================
+-- 04. Carga de vuelos
 
 INSERT INTO operativo.vuelos
     (id_aerolinea, id_ruta, nro_vuelo, fecha_hora_programada,
@@ -39,8 +19,6 @@ SELECT
          ELSE 'On-Time'
     END                                                       AS estado
 FROM (
-    -- Subconsulta: filas válidas de staging + hora programada como timestamp
-    -- (1018 / 100 = 10 horas; 1018 % 100 = 18 minutos)
     SELECT raw.*,
            raw.fl_date::DATE
          + (raw.crs_dep_time::INT / 100) * INTERVAL '1 hour'
@@ -54,7 +32,6 @@ JOIN operativo.rutas      r ON r.aeropuerto_origen  = s.origin
                            AND r.aeropuerto_destino = s.dest
 ON CONFLICT (id_aerolinea, nro_vuelo, fecha_hora_programada) DO NOTHING;
 
--- Control de calidad de la carga
 SELECT (SELECT COUNT(*) FROM staging.vuelos_raw)  AS filas_staging,
        (SELECT COUNT(*) FROM operativo.vuelos)    AS vuelos_cargados,
        (SELECT COUNT(*) FROM staging.vuelos_raw)

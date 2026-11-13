@@ -1,9 +1,5 @@
--- =====================================================================
--- 00. Ejecuta todos los scripts en orden (desde la raíz del proyecto):
---     psql -d aerotrust -f sql/00_ejecutar_todo.sql
--- El orden lo imponen las claves foráneas:
---     aerolineas -> rutas -> vuelos -> evaluacion_riesgo -> contratos -> polizas
--- =====================================================================
+-- Ejecuta todos los scripts en orden, desde la raíz del proyecto:
+-- psql -d aerotrust -f sql/00_ejecutar_todo.sql
 \echo '== 01. Esquemas y tablas =='
 \ir 01_esquemas_y_tablas.sql
 \echo '== 02. Staging (carga del CSV) =='
