@@ -17,24 +17,28 @@ INSERT INTO operativo.aerolineas (codigo_iata, nombre, pais_jurisdiccion) VALUES
     ('WN', 'Southwest Airlines',  'Estados Unidos'),
     ('YX', 'Republic Airways',    'Estados Unidos');
 
+-- Los códigos se limpian con UPPER(TRIM(...)): sin espacios y en mayúsculas.
+
 -- Códigos que no estén en la lista anterior
 INSERT INTO operativo.aerolineas (codigo_iata, nombre, pais_jurisdiccion)
-SELECT DISTINCT s.op_unique_carrier, s.op_unique_carrier, 'Estados Unidos'
+SELECT DISTINCT UPPER(TRIM(s.op_unique_carrier)),
+                UPPER(TRIM(s.op_unique_carrier)),
+                'Estados Unidos'
 FROM staging.vuelos_raw s
-WHERE LENGTH(s.op_unique_carrier) = 2
+WHERE LENGTH(TRIM(s.op_unique_carrier)) = 2
   AND NOT EXISTS (SELECT 1 FROM operativo.aerolineas a
-                  WHERE a.codigo_iata = s.op_unique_carrier);
+                  WHERE a.codigo_iata = UPPER(TRIM(s.op_unique_carrier)));
 
 -- distancia en millas -> km
 INSERT INTO operativo.rutas (aeropuerto_origen, aeropuerto_destino, distancia_km)
-SELECT origin,
-       dest,
+SELECT UPPER(TRIM(origin)),
+       UPPER(TRIM(dest)),
        ROUND(MAX(distance::NUMERIC) * 1.609344)::INT
 FROM staging.vuelos_raw
-WHERE LENGTH(origin) = 3
-  AND LENGTH(dest)   = 3
-  AND origin <> dest
-GROUP BY origin, dest;
+WHERE LENGTH(TRIM(origin)) = 3
+  AND LENGTH(TRIM(dest))   = 3
+  AND UPPER(TRIM(origin)) <> UPPER(TRIM(dest))
+GROUP BY UPPER(TRIM(origin)), UPPER(TRIM(dest));
 
 SELECT (SELECT COUNT(*) FROM operativo.aerolineas) AS aerolineas,
        (SELECT COUNT(*) FROM operativo.rutas)      AS rutas;

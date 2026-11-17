@@ -27,9 +27,9 @@ FROM (
     WHERE raw.crs_dep_time <> ''
       AND (raw.cancelled = '1' OR raw.dep_delay <> '')
 ) s
-JOIN operativo.aerolineas a ON a.codigo_iata        = s.op_unique_carrier
-JOIN operativo.rutas      r ON r.aeropuerto_origen  = s.origin
-                           AND r.aeropuerto_destino = s.dest
+JOIN operativo.aerolineas a ON a.codigo_iata        = UPPER(TRIM(s.op_unique_carrier))
+JOIN operativo.rutas      r ON r.aeropuerto_origen  = UPPER(TRIM(s.origin))
+                           AND r.aeropuerto_destino = UPPER(TRIM(s.dest))
 ON CONFLICT (id_aerolinea, nro_vuelo, fecha_hora_programada) DO NOTHING;
 
 SELECT (SELECT COUNT(*) FROM staging.vuelos_raw)  AS filas_staging,

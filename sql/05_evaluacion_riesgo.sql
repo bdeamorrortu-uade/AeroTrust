@@ -1,5 +1,18 @@
 -- 05. Índice de confiabilidad por aerolínea, ruta y franja horaria
+
+-- Función (UDF): calcula el índice a partir de las dos tasas.
 -- indice = 100 * (1 - 0.6 * tasa_demora - 0.4 * tasa_cancelacion)
+-- Se usa acá y en las consultas del 07, así la fórmula está en un solo lugar.
+CREATE OR REPLACE FUNCTION analitico.fn_indice_confiabilidad(
+    p_tasa_demora      NUMERIC,
+    p_tasa_cancelacion NUMERIC
+)
+RETURNS NUMERIC
+LANGUAGE sql
+IMMUTABLE
+AS $$
+    SELECT ROUND(100 * (1 - 0.6 * p_tasa_demora - 0.4 * p_tasa_cancelacion), 2);
+$$;
 
 CREATE OR REPLACE VIEW operativo.v_vuelos_con_franja AS
 SELECT v.*,
@@ -19,10 +32,9 @@ SELECT
     COUNT(*)                                                        AS total_vuelos,
     ROUND(AVG(CASE WHEN estado = 'Delayed'   THEN 1 ELSE 0 END), 4) AS tasa_demora,
     ROUND(AVG(CASE WHEN estado = 'Cancelled' THEN 1 ELSE 0 END), 4) AS tasa_cancelacion,
-    ROUND(100 * (1
-          - 0.6 * AVG(CASE WHEN estado = 'Delayed'   THEN 1 ELSE 0 END)
-          - 0.4 * AVG(CASE WHEN estado = 'Cancelled' THEN 1 ELSE 0 END)), 2)
-                                                                    AS indice_confiabilidad,
+    analitico.fn_indice_confiabilidad(
+        AVG(CASE WHEN estado = 'Delayed'   THEN 1 ELSE 0 END),
+        AVG(CASE WHEN estado = 'Cancelled' THEN 1 ELSE 0 END))      AS indice_confiabilidad,
     CURRENT_DATE                                                    AS fecha_calculo
 FROM operativo.v_vuelos_con_franja
 GROUP BY id_aerolinea, id_ruta, franja_horaria

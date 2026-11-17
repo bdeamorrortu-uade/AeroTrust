@@ -95,7 +95,8 @@ CREATE TABLE financiero.polizas_seguro (
         REFERENCES operativo.vuelos (id_vuelo) ON DELETE RESTRICT,
     id_evaluacion       BIGINT NOT NULL
         REFERENCES analitico.evaluacion_riesgo (id_evaluacion) ON DELETE RESTRICT,
-    prima               NUMERIC(10,2) NOT NULL CHECK (prima > 0),
+    prob_pago           NUMERIC(5,4)  NOT NULL CHECK (prob_pago BETWEEN 0 AND 1),
+    prima              NUMERIC(10,2) NOT NULL CHECK (prima > 0),
     monto_indemnizacion NUMERIC(10,2) NOT NULL CHECK (monto_indemnizacion > 0),
     estado_liquidacion  VARCHAR(15)   NOT NULL DEFAULT 'Pendiente'
         CHECK (estado_liquidacion IN ('Pendiente', 'Liquidada', 'No corresponde')),

@@ -2,8 +2,8 @@
 -- A, B, C y D tienen que dar error.
 
 -- A. Póliza duplicada
-INSERT INTO financiero.polizas_seguro (id_contrato, id_vuelo, id_evaluacion, prima, monto_indemnizacion)
-SELECT id_contrato, id_vuelo, id_evaluacion, prima, monto_indemnizacion
+INSERT INTO financiero.polizas_seguro (id_contrato, id_vuelo, id_evaluacion, prob_pago, prima, monto_indemnizacion)
+SELECT id_contrato, id_vuelo, id_evaluacion, prob_pago, prima, monto_indemnizacion
 FROM financiero.polizas_seguro
 ORDER BY id_poliza
 LIMIT 1;
@@ -24,22 +24,16 @@ WHERE estado_liquidacion = 'Liquidada';
 
 BEGIN;
 
-UPDATE financiero.polizas_seguro p
-SET estado_liquidacion = 'Liquidada',
-    fecha_liquidacion  = NOW()
-FROM operativo.vuelos v, financiero.contratos_corporativos c
-WHERE p.id_vuelo    = v.id_vuelo
-  AND p.id_contrato = c.id_contrato
-  AND p.estado_liquidacion = 'Pendiente'
-  AND (v.estado = 'Cancelled' OR v.demora_min > c.umbral_sla_min);
+-- El procedimiento corre dentro de la transacción: el ROLLBACK también deshace lo que hizo
+CALL financiero.sp_liquidar_polizas(NULL, NULL, NULL);
 
 SELECT COUNT(*) AS liquidadas_dentro_de_la_transaccion
 FROM financiero.polizas_seguro
 WHERE estado_liquidacion = 'Liquidada';
 
 -- Esto falla (póliza duplicada)
-INSERT INTO financiero.polizas_seguro (id_contrato, id_vuelo, id_evaluacion, prima, monto_indemnizacion)
-SELECT id_contrato, id_vuelo, id_evaluacion, prima, monto_indemnizacion
+INSERT INTO financiero.polizas_seguro (id_contrato, id_vuelo, id_evaluacion, prob_pago, prima, monto_indemnizacion)
+SELECT id_contrato, id_vuelo, id_evaluacion, prob_pago, prima, monto_indemnizacion
 FROM financiero.polizas_seguro
 ORDER BY id_poliza
 LIMIT 1;
@@ -68,27 +62,9 @@ WHERE p.estado_liquidacion = 'Pendiente'
   AND (v.estado = 'Cancelled' OR v.demora_min > c.umbral_sla_min)
 ORDER BY p.id_poliza;
 
-BEGIN;
-
-UPDATE financiero.polizas_seguro p
-SET estado_liquidacion = 'Liquidada',
-    fecha_liquidacion  = NOW()
-FROM operativo.vuelos v, financiero.contratos_corporativos c
-WHERE p.id_vuelo    = v.id_vuelo
-  AND p.id_contrato = c.id_contrato
-  AND p.estado_liquidacion = 'Pendiente'
-  AND (v.estado = 'Cancelled' OR v.demora_min > c.umbral_sla_min);
-
-UPDATE financiero.polizas_seguro p
-SET estado_liquidacion = 'No corresponde'
-FROM operativo.vuelos v, financiero.contratos_corporativos c
-WHERE p.id_vuelo    = v.id_vuelo
-  AND p.id_contrato = c.id_contrato
-  AND p.estado_liquidacion = 'Pendiente'
-  AND v.estado <> 'Cancelled'
-  AND v.demora_min <= c.umbral_sla_min;
-
-COMMIT;
+-- Primero se liquida un solo contrato (Andes Consultores) y después el resto
+CALL financiero.sp_liquidar_polizas(1, NULL, NULL);
+CALL financiero.sp_liquidar_polizas(NULL, NULL, NULL);
 
 SELECT estado_liquidacion,
        COUNT(*)                 AS polizas,

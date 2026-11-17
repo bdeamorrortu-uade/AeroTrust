@@ -15,9 +15,9 @@ FROM (
            COUNT(*) AS total_vuelos,
            ROUND(100.0 * AVG(CASE WHEN v.estado = 'Delayed'   THEN 1 ELSE 0 END), 1) AS pct_demorados,
            ROUND(100.0 * AVG(CASE WHEN v.estado = 'Cancelled' THEN 1 ELSE 0 END), 1) AS pct_cancelados,
-           ROUND(100 * (1
-                 - 0.6 * AVG(CASE WHEN v.estado = 'Delayed'   THEN 1 ELSE 0 END)
-                 - 0.4 * AVG(CASE WHEN v.estado = 'Cancelled' THEN 1 ELSE 0 END)), 2) AS indice
+           analitico.fn_indice_confiabilidad(
+               AVG(CASE WHEN v.estado = 'Delayed'   THEN 1 ELSE 0 END),
+               AVG(CASE WHEN v.estado = 'Cancelled' THEN 1 ELSE 0 END)) AS indice
     FROM operativo.vuelos v
     JOIN operativo.aerolineas a ON a.id_aerolinea = v.id_aerolinea
     GROUP BY a.codigo_iata, a.nombre
@@ -89,3 +89,16 @@ FROM financiero.contratos_corporativos c
 LEFT JOIN financiero.polizas_seguro p ON p.id_contrato = c.id_contrato
 GROUP BY c.id_contrato, c.razon_social, c.nivel_cobertura, c.umbral_sla_min
 ORDER BY c.id_contrato;
+
+-- C7. Contratos con sociedades anónimas (S.A.) y datos del CUIT
+-- LIKE busca el patrón en la razón social; SUBSTRING separa las partes del CUIT.
+SELECT
+    UPPER(c.razon_social)                     AS razon_social,
+    LOWER(c.nivel_cobertura)                  AS cobertura,
+    SUBSTRING(c.cuit FROM 1  FOR 2)           AS tipo_cuit,      -- 30 = persona jurídica
+    SUBSTRING(c.cuit FROM 4  FOR 8)           AS nro_cuit,
+    SUBSTRING(c.cuit FROM 13 FOR 1)           AS digito_verificador,
+    TRIM(c.razon_social) || ' (' || c.cuit || ')' AS descripcion
+FROM financiero.contratos_corporativos c
+WHERE c.razon_social LIKE '%S.A.'
+ORDER BY c.razon_social;

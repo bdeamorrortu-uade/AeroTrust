@@ -16,3 +16,5 @@
 \ir 07_consultas.sql
 \echo '== 08. Demo de integridad (los errores de A, B, C y D son esperados) =='
 \ir 08_demo_integridad_transaccion.sql
+\echo '== 09. Seguridad: roles y permisos (los errores marcados en D son esperados) =='
+\ir 09_seguridad_roles.sql
