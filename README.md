@@ -77,7 +77,7 @@ clic derecho sobre `staging.vuelos_raw` → *Import/Export Data* (formato CSV, H
 Al procedimiento se le quita el permiso de ejecución a `PUBLIC` (`REVOKE`) y se le da solo al
 liquidador. Los usuarios se crean sin contraseña y se prueban con `SET ROLE`.
 
-## Decisiones tomadas (para el informe)
+## Decisiones tomadas
 
 **Reglas de transformación**
 - `fecha_hora_programada` = `fl_date` + `crs_dep_time` (hora local).
@@ -109,10 +109,6 @@ liquidador. Los usuarios se crean sin contraseña y se prueban con `SET ROLE`.
   el umbral se toma de `contratos_corporativos.umbral_sla_min` (evita una dependencia transitiva).
 - Redundancias controladas y justificadas: `demora_min`/`estado` en `vuelos` (vienen de la
   fuente) y `evaluacion_riesgo` (foto del riesgo al emitir cada póliza).
-
-**Fuera de alcance (mencionado en la Actividad 2, no implementado)**
-- Particionamiento de `vuelos` por fecha, índices BRIN/parciales, vistas materializadas con
-  refresco programado y réplica de lectura. Con 10.000 vuelos no aportan y suman complejidad.
 
 **Limitaciones**
 - Datos de EE.UU. como prueba de concepto: las fuentes abiertas argentinas (ANAC) no

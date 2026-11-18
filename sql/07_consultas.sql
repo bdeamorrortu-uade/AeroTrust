@@ -90,12 +90,11 @@ LEFT JOIN financiero.polizas_seguro p ON p.id_contrato = c.id_contrato
 GROUP BY c.id_contrato, c.razon_social, c.nivel_cobertura, c.umbral_sla_min
 ORDER BY c.id_contrato;
 
--- C7. Contratos con sociedades anónimas (S.A.) y datos del CUIT
--- LIKE busca el patrón en la razón social; SUBSTRING separa las partes del CUIT.
+-- C7. Contratos con sociedades anónimas y datos del CUIT
 SELECT
     UPPER(c.razon_social)                     AS razon_social,
     LOWER(c.nivel_cobertura)                  AS cobertura,
-    SUBSTRING(c.cuit FROM 1  FOR 2)           AS tipo_cuit,      -- 30 = persona jurídica
+    SUBSTRING(c.cuit FROM 1  FOR 2)           AS tipo_cuit,
     SUBSTRING(c.cuit FROM 4  FOR 8)           AS nro_cuit,
     SUBSTRING(c.cuit FROM 13 FOR 1)           AS digito_verificador,
     TRIM(c.razon_social) || ' (' || c.cuit || ')' AS descripcion

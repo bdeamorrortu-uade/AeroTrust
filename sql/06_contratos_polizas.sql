@@ -9,8 +9,7 @@ VALUES
     ('Cuyo Logística S.A.',             '30-71000004-4', '2023-01-01', '2023-12-31', 'Estándar', 120, 'Vencido'),
     ('Patagonia Energía S.A.',          '30-71000005-5', '2024-06-01', '2025-05-31', 'Premium',   45, 'Activo');
 
--- prob_pago: proporción de vuelos de la misma aerolínea, ruta y franja que se
--- cancelaron o superaron el umbral del contrato
+-- prob_pago: % de vuelos cancelados o por encima del umbral del contrato
 WITH prob AS (
     SELECT v.id_aerolinea,
            v.id_ruta,
@@ -73,12 +72,7 @@ LEFT JOIN financiero.polizas_seguro p ON p.id_contrato = c.id_contrato
 GROUP BY c.id_contrato, c.razon_social, c.estado
 ORDER BY c.id_contrato;
 
--- Procedimiento almacenado: liquida las pólizas pendientes.
---   'Liquidada'      si el vuelo se canceló o se demoró más que el umbral del contrato
---   'No corresponde' en el resto de los casos
--- p_id_contrato (IN): contrato a liquidar, o NULL para todos.
--- p_liquidadas / p_no_corresponde (OUT): cantidad de pólizas afectadas.
--- Se usa en el 08: CALL financiero.sp_liquidar_polizas(NULL, NULL, NULL);
+-- Liquida las pólizas pendientes (p_id_contrato NULL = todos los contratos)
 CREATE OR REPLACE PROCEDURE financiero.sp_liquidar_polizas(
     IN  p_id_contrato    INT,
     OUT p_liquidadas     INT,

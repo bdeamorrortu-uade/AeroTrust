@@ -24,7 +24,6 @@ WHERE estado_liquidacion = 'Liquidada';
 
 BEGIN;
 
--- El procedimiento corre dentro de la transacción: el ROLLBACK también deshace lo que hizo
 CALL financiero.sp_liquidar_polizas(NULL, NULL, NULL);
 
 SELECT COUNT(*) AS liquidadas_dentro_de_la_transaccion
@@ -62,7 +61,6 @@ WHERE p.estado_liquidacion = 'Pendiente'
   AND (v.estado = 'Cancelled' OR v.demora_min > c.umbral_sla_min)
 ORDER BY p.id_poliza;
 
--- Primero se liquida un solo contrato (Andes Consultores) y después el resto
 CALL financiero.sp_liquidar_polizas(1, NULL, NULL);
 CALL financiero.sp_liquidar_polizas(NULL, NULL, NULL);
 

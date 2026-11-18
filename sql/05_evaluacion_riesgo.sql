@@ -1,8 +1,6 @@
 -- 05. Índice de confiabilidad por aerolínea, ruta y franja horaria
 
--- Función (UDF): calcula el índice a partir de las dos tasas.
 -- indice = 100 * (1 - 0.6 * tasa_demora - 0.4 * tasa_cancelacion)
--- Se usa acá y en las consultas del 07, así la fórmula está en un solo lugar.
 CREATE OR REPLACE FUNCTION analitico.fn_indice_confiabilidad(
     p_tasa_demora      NUMERIC,
     p_tasa_cancelacion NUMERIC

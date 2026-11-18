@@ -17,8 +17,6 @@ INSERT INTO operativo.aerolineas (codigo_iata, nombre, pais_jurisdiccion) VALUES
     ('WN', 'Southwest Airlines',  'Estados Unidos'),
     ('YX', 'Republic Airways',    'Estados Unidos');
 
--- Los códigos se limpian con UPPER(TRIM(...)): sin espacios y en mayúsculas.
-
 -- Códigos que no estén en la lista anterior
 INSERT INTO operativo.aerolineas (codigo_iata, nombre, pais_jurisdiccion)
 SELECT DISTINCT UPPER(TRIM(s.op_unique_carrier)),
